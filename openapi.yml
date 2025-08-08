@@ -1,0 +1,352 @@
+openapi: 3.1.1
+info:
+  title: Subscription Aggregation REST Service
+  version: 0.0.1
+  description: "Сервис для управления и агрегации подписок пользователей"
+
+paths:
+  /subscription:
+    get:
+      summary: "Получить все подписки"
+      description: "Возвращает список всех активных подписок"
+      responses:
+        "200":
+          description: "Успешно получены все подписки"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ListSubscriptionsRes"
+        "500":
+          description: "Внутренняя ошибка сервера"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    post:
+      summary: "Создать новую подписку"
+      description: "Создает новую подписку для пользователя"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateSubscriptionReq"
+      responses:
+        "201":
+          description: "Подписка успешно создана"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Subscription"
+        "400":
+          description: "Некорректные данные в запросе"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: "Внутренняя ошибка сервера"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /subscription/{id}:
+    get:
+      summary: "Получить подписку по ID"
+      description: "Возвращает информацию о подписке по указанному ID"
+      parameters:
+        - name: id
+          in: path
+          description: "Идентификатор подписки"
+          required: true
+          schema:
+            type: integer
+            example: 12345
+      responses:
+        "200":
+          description: "Успешно получена подписка"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Subscription"
+        "404":
+          description: "Подписка не найдена"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: "Внутренняя ошибка сервера"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    patch:
+      summary: "Обновить подписку"
+      description: "Обновляет существующую подписку"
+      parameters:
+        - name: id
+          in: path
+          description: "Идентификатор подписки"
+          required: true
+          schema:
+            type: integer
+            example: 12345
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateSubscriptionReq"
+      responses:
+        "200":
+          description: "Подписка успешно обновлена"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Subscription"
+        "400":
+          description: "Некорректные данные в запросе"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: "Подписка не найдена"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: "Внутренняя ошибка сервера"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    delete:
+      summary: "Удалить подписку"
+      description: "Удаляет подписку по указанному ID"
+      parameters:
+        - name: id
+          in: path
+          description: "Идентификатор подписки"
+          required: true
+          schema:
+            type: integer
+            example: 12345
+      responses:
+        "204":
+          description: "Подписка успешно удалена"
+        "404":
+          description: "Подписка не найдена"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: "Внутренняя ошибка сервера"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /subscription/calculate-total-cost:
+    post:
+      summary: "Подсчитать общую стоимость подписок"
+      description: "Вычисляет сумму всех подписок за выбранный период с фильтрацией по пользователю и названию сервиса"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CalculateTotalCostReq"
+      responses:
+        "200":
+          description: "Успешно подсчитана сумма"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TotalCostRes"
+        "400":
+          description: "Некорректные данные в запросе"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: "Внутренняя ошибка сервера"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+components:
+  schemas:
+    ListSubscriptionsRes:
+      type: array
+      description: "Список подписок"
+      items:
+        $ref: "#/components/schemas/Subscription"
+
+    Subscription:
+      type: object
+      description: "Запись о подписке"
+      required:
+        - id
+        - service_name
+        - price
+        - user_id
+        - start_date
+      properties:
+        id:
+          type: integer
+          description: "Уникальный идентификатор подписки"
+          example: 12345
+        service_name:
+          type: string
+          description: "Название сервиса, на который оформлена подписка"
+          example: "Yandex Plus"
+        price:
+          type: integer
+          description: "Цена подписки в рублях, без копеек"
+          minimum: 0
+          example: 400
+        user_id:
+          type: string
+          format: uuid
+          description: "Идентификатор пользователя"
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        start_date:
+          type: string
+          description: "Дата начала подписки в формате MM-YYYY"
+          pattern: '^(0[1-9]|1[0-2])-\d{4}$'
+          example: "07-2024"
+          minLength: 7
+          maxLength: 7
+        end_date:
+          type: string
+          description: "Дата окончания подписки в формате MM-YYYY (опционально)"
+          pattern: '^(0[1-9]|1[0-2])-\d{4}$'
+          example: "12-2024"
+          minLength: 7
+          maxLength: 7
+
+    CreateSubscriptionReq:
+      type: object
+      required:
+        - service_name
+        - price
+        - user_id
+        - start_date
+      properties:
+        service_name:
+          type: string
+          description: "Название сервиса, на который оформляется подписка"
+          example: "Netflix"
+        price:
+          type: integer
+          description: "Цена подписки в рублях, без копеек"
+          minimum: 0
+          example: 500
+        user_id:
+          type: string
+          format: uuid
+          description: "Идентификатор пользователя"
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        start_date:
+          type: string
+          description: "Дата начала подписки в формате MM-YYYY"
+          pattern: '^(0[1-9]|1[0-2])-\d{4}$'
+          example: "08-2024"
+          minLength: 7
+          maxLength: 7
+        end_date:
+          type: string
+          description: "Дата окончания подписки в формате MM-YYYY (опционально)"
+          pattern: '^(0[1-9]|1[0-2])-\d{4}$'
+          example: "12-2024"
+          minLength: 7
+          maxLength: 7
+    UpdateSubscriptionReq:
+      type: object
+      properties:
+        service_name:
+          type: string
+          description: "Название сервиса, на который оформляется подписка"
+          example: "Netflix"
+        price:
+          type: integer
+          description: "Цена подписки в рублях, без копеек"
+          minimum: 0
+          example: 500
+        user_id:
+          type: string
+          format: uuid
+          description: "Идентификатор пользователя"
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        start_date:
+          type: string
+          description: "Дата начала подписки в формате MM-YYYY"
+          pattern: '^(0[1-9]|1[0-2])-\d{4}$'
+          example: "08-2024"
+          minLength: 7
+          maxLength: 7
+        end_date:
+          type: string
+          description: "Дата окончания подписки в формате MM-YYYY (опционально)"
+          pattern: '^(0[1-9]|1[0-2])-\d{4}$'
+          example: "12-2024"
+          minLength: 7
+          maxLength: 7
+
+    CalculateTotalCostReq:
+      type: object
+      description: "Данные для подсчета суммарной стоимости подписок"
+      properties:
+        user_id:
+          type: string
+          format: uuid
+          description: "Идентификатор пользователя (фильтр)"
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        service_name:
+          type: string
+          description: "Название сервиса (фильтр)"
+          example: "Yandex Plus"
+        start_period:
+          type: string
+          description: "Дата начала периода в формате MM-YYYY (фильтр)"
+          pattern: '^(0[1-9]|1[0-2])-\d{4}$'
+          example: "01-2023"
+          minLength: 7
+          maxLength: 7
+        end_period:
+          type: string
+          description: "Дата окончания периода в формате MM-YYYY (фильтр)"
+          pattern: '^(0[1-9]|1[0-2])-\d{4}$'
+          example: "12-2023"
+          minLength: 7
+          maxLength: 7
+
+    TotalCostRes:
+      type: object
+      description: "Результат подсчета суммарной стоимости подписок"
+      properties:
+        total_cost:
+          type: integer
+          description: "Суммарная стоимость подписок в рублях"
+          example: 12000
+        count:
+          type: integer
+          description: "Количество учтенных подписок"
+          example: 3
+
+    Error:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: string
+          description: "Описание ошибки"
+          example: "Invalid date format"
