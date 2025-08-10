@@ -1,20 +1,37 @@
 package main
 
 import (
+	"fmt"
 	"log/slog"
 	"net/http"
 	"os"
 
 	"github.com/teryble09/subscription_service/api"
 	"github.com/teryble09/subscription_service/service"
+	"github.com/teryble09/subscription_service/storage/postgres"
 	"github.com/teryble09/subscription_service/xmiddleware"
 )
 
 func main() {
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
 
+	databaseURL := fmt.Sprintf("postgresql://%s:%s@localhost:%s/%s?sslmode=disable",
+		os.Getenv("DB_USER"),
+		os.Getenv("DB_PASSWORD"),
+		os.Getenv("DB_PORT"),
+		os.Getenv("DB_NAME"),
+	)
+	db, err := postgres.NewStorage(databaseURL, logger)
+	if err != nil {
+		logger.Error("Can not connect to the database",
+			slog.String("error", err.Error()),
+		)
+		os.Exit(1)
+	}
+
 	srv := &service.SubscriptionService{
-		Logger: logger,
+		Logger:  logger,
+		Storage: db,
 	}
 
 	server, err := api.NewServer(srv)
@@ -25,5 +42,10 @@ func main() {
 
 	loggingMiddleware := xmiddleware.NewLoggingMiddleware(logger)
 
-	http.ListenAndServe(":8080", loggingMiddleware(server))
+	logger.Info("Starting server")
+	if http.ListenAndServe(":8080", loggingMiddleware(server)) != nil {
+		logger.Error("Unable to start server",
+			slog.String("error", err.Error()),
+		)
+	}
 }
