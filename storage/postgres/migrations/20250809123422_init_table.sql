@@ -1,7 +1,7 @@
 -- +goose Up
 -- +goose StatementBegin
 CREATE TABLE subscriptions (
-    id SERIAL PRIMARY KEY,
+    id BIGSERIAL PRIMARY KEY,
     service_name TEXT NOT NULL,
     price INTEGER NOT NULL,
     user_id UUID NOT NULL,

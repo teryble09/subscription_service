@@ -19,14 +19,15 @@ func NewLoggingMiddleware(logger *slog.Logger) func(http.Handler) http.Handler {
 			logger = logger.With(
 				slog.String("req_id", reqID),
 				slog.String("method", r.Method),
+				slog.String("url", r.RequestURI),
 				slog.String("address", r.RemoteAddr),
 			)
 			start := time.Now()
 			wrapped := wrapResponseWriter(w)
 			next.ServeHTTP(wrapped, r)
-			dur := strconv.FormatInt(time.Since(start).Microseconds(), 10) + " ms"
+			dur := strconv.FormatInt(time.Since(start).Microseconds(), 10)
 			logger.Info("Request",
-				slog.String("duration", dur),
+				slog.String("duration(ms)", dur),
 				slog.Int("code", wrapped.Status()),
 			)
 		})
