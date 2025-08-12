@@ -13,6 +13,7 @@ type Storage struct {
 
 	// Подготовленные запросы
 	stmtInsertSubsription *sqlx.NamedStmt
+	stmtListSubsriptions  *sqlx.NamedStmt
 }
 
 func NewStorage(databaseURL string, logger *slog.Logger) (*Storage, error) {
