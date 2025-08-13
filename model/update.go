@@ -1,6 +1,7 @@
 package model
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/teryble09/subscription_service/api"
@@ -9,6 +10,8 @@ import (
 
 // for squirrel (sql builder), set only given columns
 type SubscriptionUpdate map[string]any
+
+var ErrEmptyUpdateRequest = errors.New("empty update request")
 
 func NewSubscriptionUpdateFromReq(req *api.UpdateSubscriptionReq) (SubscriptionUpdate, error) {
 	su := make(map[string]any, 5)
@@ -41,6 +44,10 @@ func NewSubscriptionUpdateFromReq(req *api.UpdateSubscriptionReq) (SubscriptionU
 			return nil, fmt.Errorf("parse end date: %w", err)
 		}
 		su["end_date"] = date
+	}
+
+	if len(su) == 0 {
+		return nil, ErrEmptyUpdateRequest
 	}
 
 	return su, nil

@@ -2,10 +2,12 @@ package service
 
 import (
 	"context"
+	"errors"
 	"log/slog"
 
 	"github.com/teryble09/subscription_service/api"
 	"github.com/teryble09/subscription_service/model"
+	"github.com/teryble09/subscription_service/storage"
 )
 
 type SubscriptionUpdater interface {
@@ -19,6 +21,13 @@ func (srv *SubscriptionService) SubscriptionIDPatch(
 	logger := srv.Logger.With("req_id", reqID)
 
 	su, err := model.NewSubscriptionUpdateFromReq(req)
+	if errors.Is(err, model.ErrEmptyUpdateRequest) {
+		logger.Info("Empty update request")
+		return &api.SubscriptionIDPatchBadRequest{
+			Error: "Empty request",
+		}, nil
+	}
+
 	if err != nil {
 		logger.Error("Failed to parse request into update",
 			slog.String("error", err.Error()),
@@ -29,6 +38,13 @@ func (srv *SubscriptionService) SubscriptionIDPatch(
 	}
 
 	sub, err := srv.Storage.UpdateSubscription(su, int64(params.ID))
+	if errors.Is(err, storage.ErrSubNotFound) {
+		logger.Info("Subscription not found")
+		return &api.SubscriptionIDPatchBadRequest{
+			Error: "Subscription not found",
+		}, nil
+	}
+
 	if err != nil {
 		logger.Error("Internal storage error in update req",
 			slog.String("error", err.Error()),

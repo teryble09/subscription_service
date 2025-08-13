@@ -16,17 +16,17 @@ func NewLoggingMiddleware(logger *slog.Logger) func(http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			reqID := ulid.Make().String()
 			r = r.WithContext(context.WithValue(r.Context(), "req_id", reqID))
-			logger = logger.With(
-				slog.String("req_id", reqID),
-				slog.String("method", r.Method),
-				slog.String("url", r.RequestURI),
-				slog.String("address", r.RemoteAddr),
-			)
+
 			start := time.Now()
 			wrapped := wrapResponseWriter(w)
 			next.ServeHTTP(wrapped, r)
 			dur := strconv.FormatInt(time.Since(start).Microseconds(), 10)
+
 			logger.Info("Request",
+				slog.String("req_id", reqID),
+				slog.String("method", r.Method),
+				slog.String("url", r.RequestURI),
+				slog.String("address", r.RemoteAddr),
 				slog.String("duration(ms)", dur),
 				slog.Int("code", wrapped.Status()),
 			)

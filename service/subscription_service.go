@@ -19,4 +19,5 @@ type SubscriptionStorage interface {
 	SubscriptionDeleter
 	SubscriptionGetter
 	SubscriptionUpdater
+	CostCalculator
 }

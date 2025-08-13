@@ -3,6 +3,7 @@ package postgres
 import (
 	"database/sql"
 	_ "embed"
+	"errors"
 	"fmt"
 
 	"github.com/teryble09/subscription_service/model"
@@ -48,7 +49,7 @@ var listSubs string
 
 func (s *Storage) ListSubscriptions() ([]model.Subscription, error) {
 	var result []model.Subscription
-	err := s.stmtListSubsriptions.Select(result, struct{}{})
+	err := s.stmtListSubsriptions.Select(&result, struct{}{})
 	return result, err
 }
 
@@ -79,7 +80,7 @@ var selectSub string
 func (s *Storage) GetSubscription(id int64) (model.Subscription, error) {
 	var sub model.Subscription
 	err := s.stmtSelectSubscription.Get(&sub, id)
-	if err == sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		return model.Subscription{}, storage.ErrSubNotFound
 	}
 	if err != nil {
