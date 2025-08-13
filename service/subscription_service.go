@@ -16,4 +16,7 @@ type SubscriptionService struct {
 type SubscriptionStorage interface {
 	SubscriptionLister
 	SubscriptionCreator
+	SubscriptionDeleter
+	SubscriptionGetter
+	SubscriptionUpdater
 }

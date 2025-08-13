@@ -11,9 +11,14 @@ import (
 type Storage struct {
 	db *sqlx.DB
 
-	// Подготовленные запросы
+	// Prepared queries
+	// Named for more complex operations
 	stmtInsertSubsription *sqlx.NamedStmt
 	stmtListSubsriptions  *sqlx.NamedStmt
+
+	// Use usual placeholder when only one parameter requiered
+	stmtDeleteSubscription *sqlx.Stmt
+	stmtSelectSubscription *sqlx.Stmt
 }
 
 func NewStorage(databaseURL string, logger *slog.Logger) (*Storage, error) {

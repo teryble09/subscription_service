@@ -2,11 +2,9 @@ package service
 
 import (
 	"context"
-	"database/sql"
 	"log/slog"
 
 	"github.com/teryble09/subscription_service/api"
-	"github.com/teryble09/subscription_service/lib/dateparse"
 	"github.com/teryble09/subscription_service/model"
 )
 
@@ -20,40 +18,14 @@ func (srv *SubscriptionService) SubscriptionPost(
 	reqID := ctx.Value("req_id").(string)
 	logger := srv.Logger.With("req_id", reqID)
 
-	dateStart, err := dateparse.ParseMMYYYY(req.GetStartDate())
-
+	sub, err := model.SubscriptionFromCreateReq(req)
 	if err != nil {
-		// ogen should handle validation with regexp, if date reached here it is internal error
-		logger.Error("Failed to parse start date",
+		logger.Error("Failed to parse create request",
 			slog.String("error", err.Error()),
-			slog.String("date", req.GetStartDate()),
 		)
 		return &api.SubscriptionPostInternalServerError{
-			Error: "Failed to parse start date",
+			Error: "Failed to parse request",
 		}, nil
-	}
-
-	sub := model.Subscription{
-		ServiceName: req.GetServiceName(),
-		Price:       req.GetPrice(),
-		UserID:      req.GetUserID(),
-		StartDate:   dateStart,
-	}
-
-	// do not forget to parse end date
-	if req.GetEndDate().IsSet() {
-		dateEnd, err := dateparse.ParseMMYYYY(req.GetEndDate().Value)
-		if err != nil {
-			// ogen should handle validation with regexp, if date reached here it is internal error
-			logger.Error("Failed to parse end date",
-				slog.String("error", err.Error()),
-				slog.String("date", req.GetEndDate().Value),
-			)
-			return &api.SubscriptionPostInternalServerError{
-				Error: "Failed to parse end date",
-			}, nil
-		}
-		sub.EndDate = sql.NullTime{Time: dateEnd, Valid: true}
 	}
 
 	result, err := srv.Storage.CreateSubstriction(sub)
@@ -67,18 +39,6 @@ func (srv *SubscriptionService) SubscriptionPost(
 		}, nil
 	}
 
-	resp := &api.Subscription{
-		ID:          int(result.ID),
-		ServiceName: req.ServiceName,
-		Price:       result.Price,
-		UserID:      result.UserID,
-		StartDate:   dateparse.ParseIntoMMYYYY(result.StartDate),
-	}
-
-	// do not forget end time
-	if result.EndDate.Valid {
-		resp.EndDate = api.NewOptString(dateparse.ParseIntoMMYYYY(result.EndDate.Time))
-	}
-
-	return resp, nil
+	resp := result.IntoApiSub()
+	return &resp, nil
 }
