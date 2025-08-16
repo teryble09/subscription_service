@@ -45,7 +45,10 @@ func main() {
 	loggingMiddleware := xmiddleware.NewLoggingMiddleware(logger)
 
 	logger.Info("Starting server")
-	if http.ListenAndServe(":8080", loggingMiddleware(server)) != nil {
+
+	err = http.ListenAndServe(":8080", loggingMiddleware(server))
+
+	if err != nil {
 		logger.Error("Unable to start server",
 			slog.String("error", err.Error()),
 		)
