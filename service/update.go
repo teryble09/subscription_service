@@ -54,7 +54,7 @@ func (srv *SubscriptionService) SubscriptionIDPatch(
 		}, nil
 	}
 
-	res := sub.IntoApiSub()
+	res := model.IntoApiSub(&sub)
 
 	return &res, nil
 }

@@ -29,7 +29,7 @@ func (srv *SubscriptionService) SubscriptionGet(ctx context.Context) (api.Subscr
 
 	res := api.ListSubscriptionsRes{}
 	for _, sub := range subs {
-		res = append(res, sub.IntoApiSub())
+		res = append(res, model.IntoApiSub(&sub))
 	}
 	return &res, nil
 

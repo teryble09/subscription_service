@@ -37,6 +37,6 @@ func (srv *SubscriptionService) SubscriptionIDGet(
 			Error: "Internal error",
 		}, nil
 	}
-	resp := sub.IntoApiSub()
+	resp := model.IntoApiSub(&sub)
 	return &resp, nil
 }

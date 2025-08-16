@@ -39,6 +39,6 @@ func (srv *SubscriptionService) SubscriptionPost(
 		}, nil
 	}
 
-	resp := result.IntoApiSub()
+	resp := model.IntoApiSub(&result)
 	return &resp, nil
 }

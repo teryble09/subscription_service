@@ -20,7 +20,7 @@ type Subscription struct {
 	EndDate     sql.NullTime `db:"end_date"`
 }
 
-func (sub *Subscription) IntoApiSub() api.Subscription {
+func IntoApiSub(sub *Subscription) api.Subscription {
 	n := api.Subscription{
 		ID:          int(sub.ID),
 		ServiceName: sub.ServiceName,
