@@ -5,6 +5,7 @@ import (
 	"log/slog"
 
 	"github.com/teryble09/subscription_service/api"
+	"github.com/teryble09/subscription_service/lib/xlogger"
 	"github.com/teryble09/subscription_service/model"
 )
 
@@ -15,8 +16,8 @@ type CostCalculator interface {
 func (srv *SubscriptionService) SubscriptionCalculateTotalCostPost(
 	ctx context.Context, req *api.CalculateTotalCostReq,
 ) (api.SubscriptionCalculateTotalCostPostRes, error) {
-	reqID := ctx.Value("req_id").(string)
-	logger := srv.Logger.With("req_id", reqID)
+
+	logger := xlogger.WithReqID(srv.Logger, ctx)
 
 	calcReq, err := model.NewCalculateCostRequestFromApiReq(req)
 	if err != nil {

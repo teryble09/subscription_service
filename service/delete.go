@@ -6,6 +6,7 @@ import (
 	"log/slog"
 
 	"github.com/teryble09/subscription_service/api"
+	"github.com/teryble09/subscription_service/lib/xlogger"
 	"github.com/teryble09/subscription_service/storage"
 )
 
@@ -16,8 +17,8 @@ type SubscriptionDeleter interface {
 func (srv *SubscriptionService) SubscriptionIDDelete(
 	ctx context.Context, params api.SubscriptionIDDeleteParams,
 ) (api.SubscriptionIDDeleteRes, error) {
-	reqID := ctx.Value("req_id").(string)
-	logger := srv.Logger.With("req_id", reqID)
+
+	logger := xlogger.WithReqID(srv.Logger, ctx)
 
 	err := srv.Storage.DeleteSubscription(int64(params.ID))
 
