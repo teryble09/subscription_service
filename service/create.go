@@ -5,7 +5,6 @@ import (
 	"log/slog"
 
 	"github.com/teryble09/subscription_service/api"
-	"github.com/teryble09/subscription_service/lib/xlogger"
 	"github.com/teryble09/subscription_service/model"
 )
 
@@ -16,7 +15,8 @@ type SubscriptionCreator interface {
 func (srv *SubscriptionService) SubscriptionPost(
 	ctx context.Context, req *api.CreateSubscriptionReq,
 ) (api.SubscriptionPostRes, error) {
-	logger := xlogger.WithReqID(srv.Logger, ctx)
+
+	logger := ctx.Value("logger").(*slog.Logger)
 
 	sub, err := model.SubscriptionFromCreateReq(req)
 	if err != nil {

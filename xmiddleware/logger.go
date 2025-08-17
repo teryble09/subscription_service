@@ -10,20 +10,22 @@ import (
 	"github.com/oklog/ulid/v2"
 )
 
-// adds request id in the context for logs with a key "req_id" and logs the details of the request
+// adds logger with req_id into context
 func NewLoggingMiddleware(logger *slog.Logger) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			reqID := ulid.Make().String()
-			r = r.WithContext(context.WithValue(r.Context(), "req_id", reqID))
+
+			newLogger := logger.With("req_id", reqID)
+
+			r = r.WithContext(context.WithValue(r.Context(), "logger", newLogger))
 
 			start := time.Now()
 			wrapped := wrapResponseWriter(w)
 			next.ServeHTTP(wrapped, r)
 			dur := strconv.FormatInt(time.Since(start).Microseconds(), 10)
 
-			logger.Info("Request",
-				slog.String("req_id", reqID),
+			newLogger.Info("Request",
 				slog.String("method", r.Method),
 				slog.String("url", r.RequestURI),
 				slog.String("address", r.RemoteAddr),

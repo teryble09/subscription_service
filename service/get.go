@@ -6,7 +6,6 @@ import (
 	"log/slog"
 
 	"github.com/teryble09/subscription_service/api"
-	"github.com/teryble09/subscription_service/lib/xlogger"
 	"github.com/teryble09/subscription_service/model"
 	"github.com/teryble09/subscription_service/storage"
 )
@@ -19,7 +18,7 @@ func (srv *SubscriptionService) SubscriptionIDGet(
 	ctx context.Context, params api.SubscriptionIDGetParams,
 ) (api.SubscriptionIDGetRes, error) {
 
-	logger := xlogger.WithReqID(srv.Logger, ctx)
+	logger := ctx.Value("logger").(*slog.Logger)
 
 	sub, err := srv.Storage.GetSubscription(int64(params.ID))
 	if errors.Is(err, storage.ErrSubNotFound) {

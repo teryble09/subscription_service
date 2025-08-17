@@ -6,7 +6,6 @@ import (
 	"log/slog"
 
 	"github.com/teryble09/subscription_service/api"
-	"github.com/teryble09/subscription_service/lib/xlogger"
 	"github.com/teryble09/subscription_service/model"
 	"github.com/teryble09/subscription_service/storage"
 )
@@ -19,7 +18,7 @@ func (srv *SubscriptionService) SubscriptionIDPatch(
 	ctx context.Context, req *api.UpdateSubscriptionReq, params api.SubscriptionIDPatchParams,
 ) (api.SubscriptionIDPatchRes, error) {
 
-	logger := xlogger.WithReqID(srv.Logger, ctx)
+	logger := ctx.Value("logger").(*slog.Logger)
 
 	su, err := model.NewSubscriptionUpdateFromReq(req)
 	if errors.Is(err, model.ErrEmptyUpdateRequest) {

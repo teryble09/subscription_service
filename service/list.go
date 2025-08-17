@@ -5,7 +5,6 @@ import (
 	"log/slog"
 
 	"github.com/teryble09/subscription_service/api"
-	"github.com/teryble09/subscription_service/lib/xlogger"
 	"github.com/teryble09/subscription_service/model"
 )
 
@@ -16,7 +15,7 @@ type SubscriptionLister interface {
 // returns all subscriptions
 func (srv *SubscriptionService) SubscriptionGet(ctx context.Context) (api.SubscriptionGetRes, error) {
 
-	logger := xlogger.WithReqID(srv.Logger, ctx)
+	logger := ctx.Value("logger").(*slog.Logger)
 
 	subs, err := srv.Storage.ListSubscriptions()
 	if err != nil {
