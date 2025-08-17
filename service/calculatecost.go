@@ -19,7 +19,7 @@ func (srv *SubscriptionService) SubscriptionCalculateTotalCostPost(
 
 	logger := xlogger.WithReqID(srv.Logger, ctx)
 
-	calcReq, err := model.NewCalculateCostRequestFromApiReq(req)
+	calcReq, err := model.NewCalculateCostReq(req)
 	if err != nil {
 		logger.Error("Failed to parse calculate request",
 			slog.String("error", err.Error()),

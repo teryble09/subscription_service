@@ -16,7 +16,7 @@ type CalculateCostRequest struct {
 	ServiceName sql.NullString
 }
 
-func NewCalculateCostRequestFromApiReq(req *api.CalculateTotalCostReq) (CalculateCostRequest, error) {
+func NewCalculateCostReq(req *api.CalculateTotalCostReq) (CalculateCostRequest, error) {
 	c := CalculateCostRequest{}
 	if req.UserID.IsSet() {
 		c.UserID = req.UserID.Value
