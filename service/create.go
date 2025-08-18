@@ -5,11 +5,12 @@ import (
 	"log/slog"
 
 	"github.com/teryble09/subscription_service/api"
+	"github.com/teryble09/subscription_service/dto"
 	"github.com/teryble09/subscription_service/model"
 )
 
 type SubscriptionCreator interface {
-	CreateSubstriction(model.Subscription) (model.Subscription, error)
+	CreateSubstriction(dto.CreateSubscriptionDTO) (dto.SubscriptionDTO, error)
 }
 
 func (srv *SubscriptionService) SubscriptionPost(
@@ -18,7 +19,8 @@ func (srv *SubscriptionService) SubscriptionPost(
 
 	logger := ctx.Value("logger").(*slog.Logger)
 
-	sub, err := model.SubscriptionFromCreateReq(req)
+	//модель бизнес логики из дто ogen
+	createSub, err := model.CreateSubscriptionFromCreateReq(req)
 	if err != nil {
 		logger.Error("Failed to parse create request",
 			slog.String("error", err.Error()),
@@ -28,7 +30,11 @@ func (srv *SubscriptionService) SubscriptionPost(
 		}, nil
 	}
 
-	result, err := srv.Storage.CreateSubstriction(sub)
+	// дто для бд
+	createDTO := dto.NewCreateSubscriptionDTO(createSub)
+
+	// получили обратно дто
+	subDto, err := srv.Storage.CreateSubstriction(createDTO)
 	if err != nil {
 		// no restrictions on unique so far, should be created
 		logger.Error("Failed to create subscription",
@@ -38,7 +44,9 @@ func (srv *SubscriptionService) SubscriptionPost(
 			Error: "Failed to create subscription",
 		}, nil
 	}
-
-	resp := model.IntoApiSub(&result)
+	// модель бизнес логики
+	subModel := dto.SubscriptionDtoToModel(subDto)
+	// превращается опять в дто (весьма "специфичное" для ogen)
+	resp := model.SubscriptionIntoApi(&subModel)
 	return &resp, nil
 }

@@ -5,11 +5,12 @@ import (
 	"log/slog"
 
 	"github.com/teryble09/subscription_service/api"
+	"github.com/teryble09/subscription_service/dto"
 	"github.com/teryble09/subscription_service/model"
 )
 
 type CostCalculator interface {
-	CalculateCost(model.CalculateCostRequest) (sum int, count int, err error)
+	CalculateCost(dto.CalculateCostDTO) (dto.CalculateCostResponseDTO, error)
 }
 
 func (srv *SubscriptionService) SubscriptionCalculateTotalCostPost(
@@ -18,7 +19,7 @@ func (srv *SubscriptionService) SubscriptionCalculateTotalCostPost(
 
 	logger := ctx.Value("logger").(*slog.Logger)
 
-	calcReq, err := model.NewCalculateCostReq(req)
+	calculateCost, err := model.NewCalculateCostFromReq(req)
 	if err != nil {
 		logger.Error("Failed to parse calculate request",
 			slog.String("error", err.Error()),
@@ -28,7 +29,9 @@ func (srv *SubscriptionService) SubscriptionCalculateTotalCostPost(
 		}, nil
 	}
 
-	priceSum, count, err := srv.Storage.CalculateCost(calcReq)
+	calculateDto := dto.NewCalculateCostDTO(calculateCost)
+
+	calcAnswerDto, err := srv.Storage.CalculateCost(calculateDto)
 	if err != nil {
 		logger.Error("Failed to calculate from storage",
 			slog.String("erro", err.Error()),
@@ -37,8 +40,9 @@ func (srv *SubscriptionService) SubscriptionCalculateTotalCostPost(
 			Error: "Internal",
 		}, nil
 	}
+
 	return &api.TotalCostRes{
-		TotalCost: api.NewOptInt(priceSum),
-		Count:     api.NewOptInt(count),
+		TotalCost: api.NewOptInt(calcAnswerDto.Cost),
+		Count:     api.NewOptInt(calcAnswerDto.Count),
 	}, nil
 }

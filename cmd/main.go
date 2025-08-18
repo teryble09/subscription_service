@@ -32,7 +32,6 @@ func main() {
 	}
 
 	srv := &service.SubscriptionService{
-		Logger:  logger,
 		Storage: db,
 	}
 

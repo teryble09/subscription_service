@@ -9,17 +9,20 @@ import (
 	"github.com/teryble09/subscription_service/lib/dateparse"
 )
 
-type CalculateCostRequest struct {
-	UserID      uuid.UUID
+type CalculateCost struct {
+	UserID      uuid.NullUUID
 	StartDate   sql.NullTime
 	EndDate     sql.NullTime
 	ServiceName sql.NullString
 }
 
-func NewCalculateCostReq(req *api.CalculateTotalCostReq) (CalculateCostRequest, error) {
-	c := CalculateCostRequest{}
+func NewCalculateCostFromReq(req *api.CalculateTotalCostReq) (CalculateCost, error) {
+	var c CalculateCost
 	if req.UserID.IsSet() {
-		c.UserID = req.UserID.Value
+		c.UserID = uuid.NullUUID{
+			UUID:  req.UserID.Value,
+			Valid: true,
+		}
 	}
 	if req.ServiceName.IsSet() {
 		c.ServiceName = sql.NullString{
@@ -31,7 +34,7 @@ func NewCalculateCostReq(req *api.CalculateTotalCostReq) (CalculateCostRequest, 
 		date, err := dateparse.ParseMMYYYY(req.StartPeriod.Value)
 		// ogen should handle validation
 		if err != nil {
-			return CalculateCostRequest{}, fmt.Errorf("parse start period: %w", err)
+			return CalculateCost{}, fmt.Errorf("parse start period: %w", err)
 		}
 		c.StartDate = sql.NullTime{
 			Time:  date,
@@ -42,7 +45,7 @@ func NewCalculateCostReq(req *api.CalculateTotalCostReq) (CalculateCostRequest, 
 		date, err := dateparse.ParseMMYYYY(req.EndPeriod.Value)
 		// ogen should handle validation
 		if err != nil {
-			return CalculateCostRequest{}, fmt.Errorf("parse end period: %w", err)
+			return CalculateCost{}, fmt.Errorf("parse end period: %w", err)
 		}
 		c.EndDate = sql.NullTime{
 			Time:  date,

@@ -6,12 +6,13 @@ import (
 	"log/slog"
 
 	"github.com/teryble09/subscription_service/api"
+	"github.com/teryble09/subscription_service/dto"
 	"github.com/teryble09/subscription_service/model"
 	"github.com/teryble09/subscription_service/storage"
 )
 
 type SubscriptionUpdater interface {
-	UpdateSubscription(su model.SubscriptionUpdate, id int64) (model.Subscription, error)
+	UpdateSubscription(dto.UpdateSubscriptionDTO) (dto.SubscriptionDTO, error)
 }
 
 func (srv *SubscriptionService) SubscriptionIDPatch(
@@ -20,14 +21,7 @@ func (srv *SubscriptionService) SubscriptionIDPatch(
 
 	logger := ctx.Value("logger").(*slog.Logger)
 
-	su, err := model.NewSubscriptionUpdateFromReq(req)
-	if errors.Is(err, model.ErrEmptyUpdateRequest) {
-		logger.Info("Empty update request")
-		return &api.SubscriptionIDPatchBadRequest{
-			Error: "Empty request",
-		}, nil
-	}
-
+	updateSub, err := model.UpdateSubscriptionFromReq(req, params)
 	if err != nil {
 		logger.Error("Failed to parse request into update",
 			slog.String("error", err.Error()),
@@ -37,7 +31,9 @@ func (srv *SubscriptionService) SubscriptionIDPatch(
 		}, nil
 	}
 
-	sub, err := srv.Storage.UpdateSubscription(su, int64(params.ID))
+	updateDto := dto.NewUpdateSubscriptionDTO(updateSub)
+
+	subDto, err := srv.Storage.UpdateSubscription(updateDto)
 	if errors.Is(err, storage.ErrSubNotFound) {
 		logger.Info("Subscription not found")
 		return &api.SubscriptionIDPatchBadRequest{
@@ -54,7 +50,9 @@ func (srv *SubscriptionService) SubscriptionIDPatch(
 		}, nil
 	}
 
-	res := model.IntoApiSub(&sub)
+	sub := dto.SubscriptionDtoToModel(subDto)
+
+	res := model.SubscriptionIntoApi(&sub)
 
 	return &res, nil
 }

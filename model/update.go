@@ -1,54 +1,75 @@
 package model
 
 import (
-	"errors"
+	"database/sql"
 	"fmt"
 
+	"github.com/google/uuid"
 	"github.com/teryble09/subscription_service/api"
 	"github.com/teryble09/subscription_service/lib/dateparse"
 )
 
-// for squirrel (sql builder), set only given columns
-type SubscriptionUpdate map[string]any
+type UpdateSubscription struct {
+	ID          int64
+	ServiceName sql.NullString
+	Price       sql.NullInt64
+	UserID      uuid.NullUUID
+	StartDate   sql.NullTime
+	EndDate     sql.NullTime
+}
 
-var ErrEmptyUpdateRequest = errors.New("empty update request")
+func UpdateSubscriptionFromReq(
+	req *api.UpdateSubscriptionReq, params api.SubscriptionIDPatchParams,
+) (UpdateSubscription, error) {
 
-func NewSubscriptionUpdateFromReq(req *api.UpdateSubscriptionReq) (SubscriptionUpdate, error) {
-	su := make(map[string]any, 5)
+	var us UpdateSubscription
+	us.ID = int64(params.ID)
 
 	if req.ServiceName.IsSet() {
-		su["service_name"] = req.ServiceName.Value
+		us.ServiceName = sql.NullString{
+			String: req.ServiceName.Value,
+			Valid:  true,
+		}
 	}
 
 	if req.Price.IsSet() {
-		su["price"] = req.Price.Value
+		us.Price = sql.NullInt64{
+			Int64: int64(req.Price.Value),
+		}
 	}
 
 	if req.UserID.IsSet() {
-		su["user_id"] = req.UserID.Value
+		us.UserID = uuid.NullUUID{
+			UUID:  req.UserID.Value,
+			Valid: true,
+		}
 	}
 
 	if req.StartDate.IsSet() {
 		date, err := dateparse.ParseMMYYYY(req.StartDate.Value)
 		// ogen should handle validation, error is internal
 		if err != nil {
-			return nil, fmt.Errorf("parse start date: %w", err)
+			return UpdateSubscription{}, fmt.Errorf("parse start date: %w", err)
 		}
-		su["start_date"] = date
+
+		us.StartDate = sql.NullTime{
+			Time:  date,
+			Valid: true,
+		}
 	}
 
 	if req.EndDate.IsSet() {
 		date, err := dateparse.ParseMMYYYY(req.EndDate.Value)
 		// ogen should handle validation, error is internal
 		if err != nil {
-			return nil, fmt.Errorf("parse end date: %w", err)
+			return UpdateSubscription{}, fmt.Errorf("parse end date: %w", err)
 		}
-		su["end_date"] = date
+
+		us.EndDate = sql.NullTime{
+			Time:  date,
+			Valid: true,
+		}
 	}
 
-	if len(su) == 0 {
-		return nil, ErrEmptyUpdateRequest
-	}
-
-	return su, nil
+	return us, nil
 }

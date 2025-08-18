@@ -5,11 +5,12 @@ import (
 	"log/slog"
 
 	"github.com/teryble09/subscription_service/api"
+	"github.com/teryble09/subscription_service/dto"
 	"github.com/teryble09/subscription_service/model"
 )
 
 type SubscriptionLister interface {
-	ListSubscriptions() ([]model.Subscription, error)
+	ListSubscriptions() (dto.ListSubscriptionDTO, error)
 }
 
 // returns all subscriptions
@@ -17,7 +18,7 @@ func (srv *SubscriptionService) SubscriptionGet(ctx context.Context) (api.Subscr
 
 	logger := ctx.Value("logger").(*slog.Logger)
 
-	subs, err := srv.Storage.ListSubscriptions()
+	listDto, err := srv.Storage.ListSubscriptions()
 	if err != nil {
 		logger.Error("Could not list subscriptions",
 			slog.String("error", err.Error()),
@@ -27,10 +28,10 @@ func (srv *SubscriptionService) SubscriptionGet(ctx context.Context) (api.Subscr
 		}, nil
 	}
 
-	res := api.ListSubscriptionsRes{}
-	for _, sub := range subs {
-		res = append(res, model.IntoApiSub(&sub))
-	}
+	list := dto.ListSubscriptionsDtoToModel(listDto)
+
+	res := model.ListIntoApi(list)
+
 	return &res, nil
 
 }

@@ -6,12 +6,13 @@ import (
 	"log/slog"
 
 	"github.com/teryble09/subscription_service/api"
+	"github.com/teryble09/subscription_service/dto"
 	"github.com/teryble09/subscription_service/model"
 	"github.com/teryble09/subscription_service/storage"
 )
 
 type SubscriptionGetter interface {
-	GetSubscription(id int64) (model.Subscription, error)
+	GetSubscription(dto.GetSubscriptionDTO) (dto.SubscriptionDTO, error)
 }
 
 func (srv *SubscriptionService) SubscriptionIDGet(
@@ -20,7 +21,11 @@ func (srv *SubscriptionService) SubscriptionIDGet(
 
 	logger := ctx.Value("logger").(*slog.Logger)
 
-	sub, err := srv.Storage.GetSubscription(int64(params.ID))
+	getSub := model.GetSubscriptionFromGetReq(params)
+
+	dtoGet := dto.NewGetSubscriptionDTO(getSub)
+
+	dtoSub, err := srv.Storage.GetSubscription(dtoGet)
 	if errors.Is(err, storage.ErrSubNotFound) {
 		logger.Info("Subscription not found",
 			slog.Int("id", params.ID),
@@ -37,6 +42,9 @@ func (srv *SubscriptionService) SubscriptionIDGet(
 			Error: "Internal error",
 		}, nil
 	}
-	resp := model.IntoApiSub(&sub)
+
+	sub := dto.SubscriptionDtoToModel(dtoSub)
+
+	resp := model.SubscriptionIntoApi(&sub)
 	return &resp, nil
 }

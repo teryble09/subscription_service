@@ -6,11 +6,13 @@ import (
 	"log/slog"
 
 	"github.com/teryble09/subscription_service/api"
+	"github.com/teryble09/subscription_service/dto"
+	"github.com/teryble09/subscription_service/model"
 	"github.com/teryble09/subscription_service/storage"
 )
 
 type SubscriptionDeleter interface {
-	DeleteSubscription(id int64) error
+	DeleteSubscription(dto.DeleteSubscriptionDTO) error
 }
 
 func (srv *SubscriptionService) SubscriptionIDDelete(
@@ -19,10 +21,14 @@ func (srv *SubscriptionService) SubscriptionIDDelete(
 
 	logger := ctx.Value("logger").(*slog.Logger)
 
-	err := srv.Storage.DeleteSubscription(int64(params.ID))
+	deleteSub := model.DeleteSubscriptionFromDeleteReq(params)
+
+	deleteDto := dto.NewDeleteSubscriptionDTO(deleteSub)
+
+	err := srv.Storage.DeleteSubscription(deleteDto)
 
 	if errors.Is(err, storage.ErrSubNotFound) {
-		srv.Logger.Info("Subscription not found",
+		logger.Info("Subscription not found",
 			slog.Int("id", params.ID),
 		)
 		return &api.SubscriptionIDDeleteNotFound{
